@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "LearningSet": {
+      "title": "LearningSet",
+      "description": "A set of progress tracking cards for a specific subject or skill.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier of the set."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the owner who created this set."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the learning set."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description of what is being tracked."
+        },
+        "cards": {
+          "type": "array",
+          "description": "The list of progress milestone cards in this set."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The creation timestamp in ISO 8601 format."
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The last update timestamp in ISO 8601 format."
+        }
+      },
+      "required": ["id", "userId", "title", "cards", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/sets/{setId}": {
+      "schema": "LearningSet",
+      "description": "Collections of learning sets tracked by the user."
+    }
+  }
+}

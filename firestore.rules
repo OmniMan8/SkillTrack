@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net (Pillar 10)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Check if map contains exactly the required fields for creation
+    function isValidSetSchema(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'description', 'cards', 'createdAt', 'updatedAt'])
+        && data.keys().size() == 7
+        && data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.description is string && data.description.size() <= 2000
+        && data.cards is list && data.cards.size() <= 100
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    // Match block for the sets collection
+    match /sets/{setId} {
+      allow get: if isOwner(resource.data.userId) && isValidId(setId);
+      
+      // Enforce query security at the rule level (Pillar 8)
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && isValidId(setId)
+        && request.resource.data.userId == request.auth.uid
+        && isValidSetSchema(request.resource.data);
+
+      allow update: if isSignedIn()
+        && isValidId(setId)
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid // Identity integrity: Can't change userId
+        && request.resource.data.id == resource.data.id // Can't change id
+        && request.resource.data.createdAt == resource.data.createdAt // Immortal field: Can't change createdAt
+        && isValidSetSchema(request.resource.data);
+
+      allow delete: if isOwner(resource.data.userId) && isValidId(setId);
+    }
+  }
+}

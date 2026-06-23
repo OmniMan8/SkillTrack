@@ -1,0 +1,6 @@
+{
+  "name": "SkillTrack",
+  "description": "Track your daily learning progress and projects with sets of cards, tech stacks, and JSON export/import.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
